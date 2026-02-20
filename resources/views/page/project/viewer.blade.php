@@ -27,52 +27,47 @@
                     <template x-if="isLoadingTree">
                         <div class="text-sm text-gray-500 p-2">Loading tree...</div>
                     </template>
-                    <template x-if="!isLoadingTree && tree.length === 0">
+                    <template x-if="!isLoadingTree && flatTree.length === 0">
                         <div class="text-sm text-gray-500 p-2">No files found.</div>
                     </template>
                     
-                    <ul class="text-sm">
-                        <template x-for="item in tree" :key="item.path">
-                            <li x-data="{ expanded: false }" class="mb-1">
+                    <ul class="text-sm pb-4">
+                        <template x-for="item in flatTree" :key="item.path">
+                            <li x-show="item.visible" class="mb-0.5">
+                                
                                 <!-- Directory -->
                                 <template x-if="item.type === 'directory'">
-                                    <div>
-                                        <div @click="expanded = !expanded" class="flex items-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded">
-                                            <svg x-show="!expanded" class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                            <svg x-show="expanded" class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                            <span class="text-gray-800 dark:text-gray-200" x-text="item.name"></span>
-                                        </div>
+                                    <div @click="toggleNode(item.path)" 
+                                         class="flex items-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 py-1 pr-2 rounded transition-colors duration-150 group"
+                                         :style="`padding-left: ${item.depth * 1.2 + 0.5}rem`">
+                                        <svg x-show="!item.expanded" class="w-3.5 h-3.5 mr-1 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        <svg x-show="item.expanded" class="w-3.5 h-3.5 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         
-                                        <!-- Children -->
-                                        <ul x-show="expanded" class="pl-4 mt-1 border-l ml-3 border-gray-300 dark:border-gray-600">
-                                            <template x-for="child in item.children" :key="child.path">
-                                                 <li class="py-0.5">
-                                                     <template x-if="child.type === 'directory'">
-                                                        <span class="text-gray-500 italic">... nested folder</span>
-                                                     </template>
-                                                     <template x-if="child.type === 'file'">
-                                                        <div @click="loadFile(child.path)" 
-                                                             class="flex flex-row items-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded truncate w-full"
-                                                             :class="{'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-medium': activeFile === child.path}">
-                                                            <svg class="w-3.5 h-3.5 mr-1.5 min-w-[14px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                                            <span class="text-gray-700 dark:text-gray-300 truncate" x-text="child.name" :title="child.name"></span>
-                                                        </div>
-                                                     </template>
-                                                 </li>
-                                            </template>
-                                        </ul>
+                                        <!-- Folder Icon -->
+                                        <svg x-show="!item.expanded" class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                                        <svg x-show="item.expanded" class="w-4 h-4 mr-1.5 text-indigo-500" fill="currentColor" stroke="none" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                                        
+                                        <span class="text-gray-700 dark:text-gray-300 truncate select-none" x-text="item.name"></span>
                                     </div>
                                 </template>
                                 
-                                <!-- Root level File -->
+                                <!-- File -->
                                 <template x-if="item.type === 'file'">
                                     <div @click="loadFile(item.path)" 
-                                         class="flex flex-row items-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded truncate w-full"
-                                         :class="{'bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-medium': activeFile === item.path}">
-                                        <svg class="w-4 h-4 mr-1.5 min-w-[16px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                        <span class="text-gray-700 dark:text-gray-300 truncate" x-text="item.name" :title="item.name"></span>
+                                         class="flex flex-row items-center cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 py-1.5 pr-2 rounded truncate w-full group transition-colors duration-150"
+                                         :style="`padding-left: ${item.depth * 1.2 + 0.5}rem`"
+                                         :class="{'bg-indigo-100 dark:bg-indigo-900 border-l-[3px] border-indigo-500': activeFile === item.path, 'border-l-[3px] border-transparent': activeFile !== item.path}">
+                                        
+                                        <!-- spacer for files to align with folders that have arrows -->
+                                        <span class="w-[18px] inline-block"></span>
+                                        
+                                        <svg class="w-4 h-4 mr-1.5 min-w-[16px] text-gray-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        <span class="text-gray-600 dark:text-gray-400 truncate group-hover:text-gray-900 dark:group-hover:text-white select-none" 
+                                              :class="{'font-medium text-indigo-700 dark:text-indigo-300': activeFile === item.path}"
+                                              x-text="item.name" :title="item.name"></span>
                                     </div>
                                 </template>
+                                
                             </li>
                         </template>
                     </ul>
@@ -186,7 +181,8 @@
     function projectViewer(projectId) {
         return {
             id: projectId,
-            tree: [],
+            rawTree: [],
+            flatTree: [],
             isLoadingTree: false,
             
             activeFile: null,
@@ -210,7 +206,8 @@
                     const data = await response.json();
                     
                     if (response.ok) {
-                        this.tree = data.tree;
+                        this.rawTree = data.tree;
+                        this.updateFlatTree();
                     } else {
                         console.error('Failed to load tree:', data.error);
                     }
@@ -218,6 +215,54 @@
                     console.error('Error:', error);
                 } finally {
                     this.isLoadingTree = false;
+                }
+            },
+            
+            updateFlatTree() {
+                // To preserve expanded state across refreshes, use an object map
+                const expandedMap = {};
+                this.flatTree.forEach(node => {
+                    if (node.type === 'directory') {
+                        expandedMap[node.path] = node.expanded;
+                    }
+                });
+                
+                const flatten = (nodes, depth = 0, parentVisible = true) => {
+                    let result = [];
+                    for (let node of nodes) {
+                        let expanded = expandedMap[node.path] || false;
+                        
+                        // Root folders are expanded by default or keep previous state
+                        if (depth === 0 && !(node.path in expandedMap)) {
+                            expanded = false; 
+                        }
+                        
+                        result.push({
+                            name: node.name,
+                            path: node.path,
+                            type: node.type,
+                            depth: depth,
+                            visible: parentVisible,
+                            expanded: expanded
+                        });
+                        
+                        if (node.children) {
+                            result = result.concat(flatten(node.children, depth + 1, parentVisible && expanded));
+                        }
+                    }
+                    return result;
+                };
+                
+                this.flatTree = flatten(this.rawTree);
+            },
+            
+            toggleNode(path) {
+                const node = this.flatTree.find(n => n.path === path);
+                if (node && node.type === 'directory') {
+                    // Toggle expanded state
+                    node.expanded = !node.expanded;
+                    // Rebuild flat tree to compute visibility
+                    this.updateFlatTree();
                 }
             },
             
