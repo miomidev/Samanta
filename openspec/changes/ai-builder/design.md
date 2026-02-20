@@ -21,4 +21,4 @@ The system currently copies an existing Laravel boilerplate. The new requirement
 
 ## Risks / Trade-offs
 - **Timeout**: `composer create-project` can take 2-3 minutes. PHP max execution time must be disabled (`set_time_limit(0)`).
-- **Gemini Hallucinations**: Gemini might output markdown inside code or omit necessary pieces. We will prompt it strictly.
+- **Gemini Hallucinations**: Gemini might output markdown inside code or omit necessary pieces. We will prompt it strictly...
